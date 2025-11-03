@@ -8,10 +8,10 @@
     <!-- NuGet Package Metadata -->
     <PackageId>BankDomainU201</PackageId>
     <Version>1.0.0</Version>
-    <Authors>Walter Emmanuel Salas Jimenez</Authors>
+    <Authors>Augusto Joaquin Rivera Muñoz</Authors>
     <Description>Library for managing ccd logic.</Description>
     <PackageTags>Bank Domain CreditCard Logic</PackageTags>
-    <RepositoryUrl>https://github.com/UPT-FAING-EPIS/lab-2025-ii-pds-u2-01-cs-Wsalas651</RepositoryUrl>
+    <RepositoryUrl>https://github.com/UPT-FAING-EPIS/lab-2025-ii-pds-u2-01-cs-RiveraAugusto</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
