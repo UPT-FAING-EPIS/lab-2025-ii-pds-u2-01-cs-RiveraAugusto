@@ -1,0 +1,32 @@
+name: Package NuGet
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '8.x'
+
+      - name: Restore dependencies
+        run: dotnet restore Bank/Bank.sln
+
+      - name: Build
+        run: dotnet build Bank/Bank.sln --no-restore
+
+      - name: Test
+        run: dotnet test Bank/Bank.sln --no-build --verbosity normal
+
+      - name: Pack
+        run: dotnet pack Bank/Bank.Domain/Bank.Domain.csproj -o ./
+
+      - name: Publish
+        run: dotnet nuget push *.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source "https://nuget.pkg.github.com/OWNER/"
