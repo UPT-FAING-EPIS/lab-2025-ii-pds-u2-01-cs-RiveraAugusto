@@ -1,30 +1,41 @@
-name: Publish Docs
+name: Deploy site to GitHub Pages
 
 on:
   push:
     branches:
-      - main
+      - main  
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+      - name: Upload _site folder
+        uses: actions/upload-pages-artifact@v3
         with:
-          dotnet-version: '8.x'
+          path: _site  # carpeta generada con el contenido del sitio
 
-      - name: Install DocFX
-        run: dotnet tool install -g docfx
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
-      - name: Build documentation
-        run: docfx metadata Bank/docfx.json && docfx build Bank/docfx.json
-
+    steps:
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: Bank/_site
+        id: deployment
+        uses: actions/deploy-pages@v4

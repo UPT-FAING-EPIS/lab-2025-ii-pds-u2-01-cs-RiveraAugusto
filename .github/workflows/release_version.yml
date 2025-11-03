@@ -1,51 +1,59 @@
 name: Release Version
 
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (semver, e.g. 0.1.1)'
+        required: true
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'
 
 jobs:
-  build:
+  build-release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.x'
+            dotnet-version: 8.0.x
 
-      - name: Restore dependencies
-        run: dotnet restore Bank/Bank.sln
+      - name: Determine version
+        id: v
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "ver=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            tag=${GITHUB_REF#refs/tags/}
+            echo "ver=${tag#v}" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Build
-        run: dotnet build Bank/Bank.sln --no-restore
+      - name: Update csproj version
+        run: |
+          ver=${{ steps.v.outputs.ver }}
+          echo "Setting version to $ver"
+          sed -i "s#<Version>.*</Version>#<Version>$ver</Version>#" Bank/Bank.Domain/Bank.Domain.csproj
+          grep -n "<Version>" Bank/Bank.Domain/Bank.Domain.csproj
 
-      - name: Test
-        run: dotnet test Bank/Bank.sln --no-build --verbosity normal
+      - name: Build Release
+        run: dotnet build Bank/Bank.Domain/Bank.Domain.csproj -c Release
 
       - name: Pack
-        run: dotnet pack Bank/Bank.Domain/Bank.Domain.csproj -o ./
+        run: dotnet pack Bank/Bank.Domain/Bank.Domain.csproj -c Release -o out /p:PackageVersion=${{ steps.v.outputs.ver }} /p:Version=${{ steps.v.outputs.ver }}
 
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: v${{ steps.v.outputs.ver }}
+          name: Release v${{ steps.v.outputs.ver }}
           draft: false
           prerelease: false
-
-      - name: Upload Release Asset
-        id: upload-release-asset 
-        uses: actions/upload-release-asset@v1
+          files: |
+            out/*.nupkg
+            out/*.snupkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./*.nupkg
-          asset_name: Bank.Domain.${{ github.ref_name }}.nupkg
-          asset_content_type: application/zip

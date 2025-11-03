@@ -10,13 +10,13 @@ namespace Bank.Domain.Tests
         {
             string cardType = "MoneyBack";
             ICreditCard? cardDetails = CreditCardFactory.GetCreditCard(cardType);
-
             Assert.IsNotNull(cardDetails);
             Assert.IsNotEmpty(cardDetails.GetCardType());
             Assert.GreaterOrEqual(cardDetails.GetCreditLimit(), 0);
             Assert.GreaterOrEqual(cardDetails.GetAnnualCharge(), 0);
         }
-        [Test]
+
+         [Test]
         public void GivenCreditTypePlatinumChoosen_WhenRequestCreditCard_ThenNewValidCreditCard()
         {
             ICreditCard creditCard = new PlatinumFactoryMethod().CreateProduct();
